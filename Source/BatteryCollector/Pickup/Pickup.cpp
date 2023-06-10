@@ -36,6 +36,19 @@ void APickup::set_active(bool new_pick_up_state)
 {
 	this->b_isactive = new_pick_up_state;
 }
+/*
+void APickup::was_collected()
+{
+
+}
+*/
+
+void APickup::was_collected_Implementation()
+{
+	//Log a debug message 
+	FString pickup_debug_message = GetName();
+	UE_LOG(LogClass, Log, TEXT("You have collected %s"), *pickup_debug_message);
+}
 
 // Called when the game starts or when spawned
 void APickup::BeginPlay()

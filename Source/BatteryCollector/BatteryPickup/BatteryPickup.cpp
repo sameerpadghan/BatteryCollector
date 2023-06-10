@@ -2,10 +2,14 @@
 
 
 #include "BatteryPickup.h"
+#include "Components/SceneComponent.h"
 
 ABatteryPickup::ABatteryPickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	//GetMesh()->SetupAttachment(RootComponent);
+	scence_component = CreateDefaultSubobject<USceneComponent>(TEXT("ScenceComponent"));
+	RootComponent = scence_component;
 	GetMesh()->SetupAttachment(RootComponent);
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -21,8 +25,20 @@ ABatteryPickup::ABatteryPickup()
 
 void ABatteryPickup::Tick(float DeltaTime)
 {
+	Super::Tick(DeltaTime);
 }
+
+void ABatteryPickup::was_collected_Implementation()
+{
+	Super::was_collected_Implementation();
+	//Destroy the battery
+	bool is_destroyed = this->Destroy();
+	is_destroyed = Super::Destroy();
+}
+
 
 void ABatteryPickup::BeginPlay()
 {
+	Super::BeginPlay();
 }
+

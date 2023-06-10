@@ -17,8 +17,11 @@ public:
 	ABatteryPickup();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void was_collected_Implementation() override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 private:
+	UPROPERTY()
+		class USceneComponent* scence_component;
 };

@@ -8,6 +8,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/SphereComponent.h"
+#include "BatteryPickup/BatteryPickup.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ABatteryCollectorCharacter
@@ -45,6 +47,9 @@ ABatteryCollectorCharacter::ABatteryCollectorCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+	collection_sphere_component = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	collection_sphere_component->SetupAttachment(RootComponent);
+	collection_sphere_component->SetSphereRadius(200.0f);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -56,7 +61,8 @@ void ABatteryCollectorCharacter::SetupPlayerInputComponent(class UInputComponent
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
+	PlayerInputComponent->BindAction("Collect", IE_Pressed, this, &ABatteryCollectorCharacter::collect_pickup);
+	////////////
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABatteryCollectorCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABatteryCollectorCharacter::MoveRight);
 
@@ -76,6 +82,24 @@ void ABatteryCollectorCharacter::SetupPlayerInputComponent(class UInputComponent
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ABatteryCollectorCharacter::OnResetVR);
 }
 
+void ABatteryCollectorCharacter::collect_pickup()
+{
+	//Get all over-lapping actor and store them in array
+	TArray<AActor*> collected_actor;
+	collection_sphere_component->GetOverlappingActors(collected_actor);
+	//For each actor we collected
+	for (int32 collected = 0; collected < collected_actor.Num(); ++collected)
+	{
+		//Cast the actor to pick up
+		ABatteryPickup* test_pickup = Cast<ABatteryPickup>(collected_actor[collected]);
+		if (test_pickup && !test_pickup->IsPendingKill() && test_pickup->is_active())
+		{
+			test_pickup->was_collected();
+			test_pickup->set_active(false);
+		}
+	}
+}
+
 
 void ABatteryCollectorCharacter::OnResetVR()
 {
@@ -90,12 +114,12 @@ void ABatteryCollectorCharacter::OnResetVR()
 
 void ABatteryCollectorCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		Jump();
+	Jump();
 }
 
 void ABatteryCollectorCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		StopJumping();
+	StopJumping();
 }
 
 void ABatteryCollectorCharacter::TurnAtRate(float Rate)
@@ -126,12 +150,12 @@ void ABatteryCollectorCharacter::MoveForward(float Value)
 
 void ABatteryCollectorCharacter::MoveRight(float Value)
 {
-	if ( (Controller != nullptr) && (Value != 0.0f) )
+	if ((Controller != nullptr) && (Value != 0.0f))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
