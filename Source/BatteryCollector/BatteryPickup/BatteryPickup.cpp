@@ -21,6 +21,7 @@ ABatteryPickup::ABatteryPickup()
 		GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 		GetMesh()->SetWorldScale3D(FVector(1.f));
 	}
+	battery_power = 150.0f;
 }
 
 void ABatteryPickup::Tick(float DeltaTime)

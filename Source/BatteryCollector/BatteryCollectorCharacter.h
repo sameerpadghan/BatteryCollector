@@ -10,9 +10,10 @@ UCLASS(config = Game)
 class ABatteryCollectorCharacter : public ACharacter
 {
 	GENERATED_BODY()
+private:
 
-		/** Camera boom positioning the camera behind the character */
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	/** Camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
@@ -21,6 +22,21 @@ class ABatteryCollectorCharacter : public ACharacter
 	//Collection Sphere Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USphereComponent* collection_sphere_component;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Power", meta = (AllowPrivateAccess = "true"))
+		float current_power;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Power", meta = (AllowPrivateAccess = "true"))
+		int collected_battery;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Power", meta = (AllowPrivateAccess = "true"))
+		float collected_power;
+	/*Text above player head*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Power", meta = (AllowPrivateAccess = "true"))
+		class UTextRenderComponent* text_component;
+	//Power Material
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PowerMaterial", meta = (AllowPrivateAccess = "true"))
+		class UMaterialInstanceDynamic* power_material;
+	//Power Material
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PowerMaterial", meta = (AllowPrivateAccess = "true"))
+		class UMaterialInterface* material;
 public:
 	ABatteryCollectorCharacter();
 
@@ -68,14 +84,55 @@ protected:
 	// called when pressed a key to collect pick up inside the sphere
 	UFUNCTION(BlueprintCallable, Category = "Pickup")
 		void collect_pickup();
+	/*Initial power of the chracter*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Power")
+		float initial_power;
+	//Speed when power level = 0
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Power", Meta = (BlueprintProtected = "true"))
+		float base_speed;
+	//Multiplyer for character speed
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Power", Meta = (BlueprintProtected = "true"))
+		float speed_factor;
+
+	UFUNCTION()
+		void power_effect();
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
 public:
 	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const
+	{
+		return CameraBoom;
+	}
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const
+	{
+		return FollowCamera;
+	}
+	/* Return the Collection Box Sphere*/
 	FORCEINLINE class USphereComponent* get_collection_sphere_component() const
 	{
 		return collection_sphere_component;
 	}
+	UFUNCTION()
+		FORCEINLINE float get_current_power()
+	{
+		return current_power;
+	}
+	UFUNCTION()
+		FORCEINLINE float get_initial_power()
+	{
+		return initial_power;
+	}
+	/*
+	* 1)Function to update player power
+	* 2)where power is the param to give to set the power
+	*/
+	UFUNCTION()
+		void set_power(float power);
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void Tick(float DeltaTime) override;
 };
 

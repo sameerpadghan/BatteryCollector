@@ -10,12 +10,19 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SphereComponent.h"
 #include "BatteryPickup/BatteryPickup.h"
+#include "Components/TextRenderComponent.h"
+#include "Kismet/KismetMaterialLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "UObject/UObjectGlobals.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "UObject/UObjectGlobals.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ABatteryCollectorCharacter
 
 ABatteryCollectorCharacter::ABatteryCollectorCharacter()
 {
+	this->PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -50,6 +57,17 @@ ABatteryCollectorCharacter::ABatteryCollectorCharacter()
 	collection_sphere_component = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	collection_sphere_component->SetupAttachment(RootComponent);
 	collection_sphere_component->SetSphereRadius(200.0f);
+	initial_power = 2000.0f;
+	current_power = initial_power;
+	collected_power = 0.0f;
+	text_component = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Text"));
+	text_component->SetupAttachment(RootComponent);
+	text_component->HorizontalAlignment = EHorizTextAligment::EHTA_Center;
+	text_component->VerticalAlignment = EVerticalTextAligment::EVRTA_TextCenter;
+	static FText f_text_number = FText::AsNumber(current_power);
+	text_component->Text = f_text_number;
+	speed_factor = 0.75f;
+	base_speed = 10.0f;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -96,8 +114,74 @@ void ABatteryCollectorCharacter::collect_pickup()
 		{
 			test_pickup->was_collected();
 			test_pickup->set_active(false);
+			//Increase battery count
+			collected_battery++;
+			//Increase collected power
+			collected_power = collected_power + test_pickup->get_battery_power();
 		}
 	}
+	if (collected_power > 0)
+	{
+		this->set_power(collected_power);
+	}
+}
+
+void ABatteryCollectorCharacter::power_effect()
+{
+	float result = get_current_power() / get_initial_power();
+	static float clamp_result = FMath::Clamp<float>(result, 0.0f, 1.0f);
+	FLinearColor black = FLinearColor(0, 0, 0);
+	FLinearColor white = FLinearColor(255, 255, 255);
+	FLinearColor result_color = UKismetMathLibrary::LinearColorLerp(black, white, clamp_result);
+	//1)Name of the parameter is BodyColor
+	//2)Take from the video
+	FName parameter_name = FName(TEXT("BodyColor"));
+	if (power_material != NULL)
+	{
+		this->power_material->SetVectorParameterValue(parameter_name, result_color);
+	}
+}
+
+void ABatteryCollectorCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
+void ABatteryCollectorCharacter::set_power(float power)
+{
+	//Change power
+	this->current_power = this->current_power + power;
+	//Change speed
+	GetCharacterMovement()->MaxWalkSpeed = base_speed + (speed_factor * current_power);
+	power_effect();
+	FString string = FString::SanitizeFloat(current_power);
+	//1)Below function is deprecated
+	//2)Remove it if program is not compiling
+	text_component->SetText(string);
+}
+
+void ABatteryCollectorCharacter::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	//1)Do this in the begin play and not in the constructor
+	//2)Because the  we have not set Mesh in the constructor
+	//3)Mesh it set using blueprint
+	//First element is zero
+	material = this->GetMesh()->GetMaterial(0);
+	if (material != NULL)
+	{
+		//power_material = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, material, NAME_None, EMIDCreationFlags::Transient);
+		power_material = NewObject<UMaterialInstanceDynamic>();
+		power_material->ClearFlags(EObjectFlags::RF_MarkAsNative);
+		power_material->AddToRoot();
+		power_material->Create(material, this);
+	}
+}
+
+void ABatteryCollectorCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 }
 
 
