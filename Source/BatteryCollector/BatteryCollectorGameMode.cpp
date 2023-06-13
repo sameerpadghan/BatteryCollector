@@ -5,6 +5,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "BatteryCollectorCharacter.h"
+#include "Blueprint/UserWidget.h"
 ABatteryCollectorGameMode::ABatteryCollectorGameMode()
 {
 	//Enable this otherwise it wont work
@@ -16,6 +17,13 @@ ABatteryCollectorGameMode::ABatteryCollectorGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 	this->decay_rate = 0.01f;
+	//WidgetBlueprint'/Game/HUD/BatteryHUD'
+	static auto hud_name = TEXT("/Game/HUD/BatteryHUD");
+	static auto hud_finder = ConstructorHelpers::FClassFinder<UUserWidget>(hud_name);
+	if (hud_finder.Succeeded())
+	{
+		HUDWidgetClass = hud_finder.Class;
+	}
 }
 
 void ABatteryCollectorGameMode::Tick(float DeltaTime)
@@ -34,7 +42,37 @@ void ABatteryCollectorGameMode::Tick(float DeltaTime)
 	}
 }
 
+float ABatteryCollectorGameMode::get_power_to_win() const
+{
+	return power_to_win;
+}
+
+EBatteryPlayState ABatteryCollectorGameMode::get_current_state() const
+{
+	return this->current_state;
+}
+
+void ABatteryCollectorGameMode::set_current_state(EBatteryPlayState state)
+{
+	this->current_state = state;
+}
+
 void ABatteryCollectorGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+	this->current_state = EBatteryPlayState::EPlaying;
+	ABatteryCollectorCharacter* main_player = Cast<ABatteryCollectorCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	//set the score 
+	if (main_player)
+	{
+		power_to_win = main_player->get_initial_power() * 1.25;
+	}
+	if (HUDWidgetClass != nullptr)
+	{
+		current_widget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
+		if (current_widget != nullptr)
+		{
+			current_widget->AddToViewport();
+		}
+	}
 }

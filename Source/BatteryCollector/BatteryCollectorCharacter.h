@@ -37,6 +37,8 @@ private:
 	//Power Material
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PowerMaterial", meta = (AllowPrivateAccess = "true"))
 		class UMaterialInterface* material;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PowerMaterial", meta = (AllowPrivateAccess = "true"))
+		class UMaterialInstanceDynamic* dynamic_material;
 public:
 	ABatteryCollectorCharacter();
 

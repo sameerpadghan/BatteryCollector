@@ -132,14 +132,12 @@ void ABatteryCollectorCharacter::power_effect()
 	static float clamp_result = FMath::Clamp<float>(result, 0.0f, 1.0f);
 	FLinearColor black = FLinearColor(0, 0, 0);
 	FLinearColor white = FLinearColor(255, 255, 255);
-	FLinearColor result_color = UKismetMathLibrary::LinearColorLerp(black, white, clamp_result);
+	int32 random = UKismetMathLibrary::RandomInteger(256);
+	FLinearColor result_color = UKismetMathLibrary::LinearColorLerp(black, white, random);
 	//1)Name of the parameter is BodyColor
 	//2)Take from the video
 	FName parameter_name = FName(TEXT("BodyColor"));
-	if (power_material != NULL)
-	{
-		this->power_material->SetVectorParameterValue(parameter_name, result_color);
-	}
+	dynamic_material->SetVectorParameterValue(parameter_name, result_color);
 }
 
 void ABatteryCollectorCharacter::BeginPlay()
@@ -172,11 +170,12 @@ void ABatteryCollectorCharacter::OnConstruction(const FTransform& Transform)
 	if (material != NULL)
 	{
 		//power_material = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, material, NAME_None, EMIDCreationFlags::Transient);
-		power_material = NewObject<UMaterialInstanceDynamic>();
-		power_material->ClearFlags(EObjectFlags::RF_MarkAsNative);
-		power_material->AddToRoot();
-		power_material->Create(material, this);
+		//power_material = NewObject<UMaterialInstanceDynamic>();
+		//power_material->ClearFlags(EObjectFlags::RF_Dynamic);
+		//power_material->AddToRoot();
+		//power_material->Create(material, this);
 	}
+	dynamic_material = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
 }
 
 void ABatteryCollectorCharacter::Tick(float DeltaTime)

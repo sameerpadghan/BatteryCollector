@@ -30,4 +30,7 @@ protected:
 private:
 	UPROPERTY()
 		class USceneComponent* scence_component;
+
+	UPROPERTY()
+		class UParticleSystem* emitter_template;
 };

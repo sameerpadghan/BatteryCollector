@@ -3,7 +3,9 @@
 
 #include "BatteryPickup.h"
 #include "Components/SceneComponent.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "UObject/ConstructorHelpers.h"
 ABatteryPickup::ABatteryPickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -22,6 +24,14 @@ ABatteryPickup::ABatteryPickup()
 		GetMesh()->SetWorldScale3D(FVector(1.f));
 	}
 	battery_power = 150.0f;
+	//ParticleSystem'/Game/ExampleContent/Effects/ParticleSystems/P_electricity_arc.P_electricity_arc'
+	static auto particle_system_name = TEXT("/Game/ExampleContent/Effects/ParticleSystems/P_electricity_arc");
+	static auto particle_system_finder = ConstructorHelpers::FObjectFinder<UParticleSystem>(particle_system_name);
+	if (particle_system_finder.Succeeded())
+	{
+		emitter_template = particle_system_finder.Object;
+	}
+
 }
 
 void ABatteryPickup::Tick(float DeltaTime)
@@ -32,9 +42,29 @@ void ABatteryPickup::Tick(float DeltaTime)
 void ABatteryPickup::was_collected_Implementation()
 {
 	Super::was_collected_Implementation();
+	FVector vector = this->GetActorLocation();
+	FRotator rotator = this->GetActorRotation();
 	//Destroy the battery
 	bool is_destroyed = this->Destroy();
-	is_destroyed = Super::Destroy();
+	/*
+	UParticleSystemComponent* particle_component = UGameplayStatics::SpawnEmitterAttached(
+		emitter_template,
+		this->scence_component,
+		NAME_None,
+		vector,
+		rotator,
+		EAttachLocation::KeepRelativeOffset
+	);
+	*/
+	UParticleSystemComponent* particle_component = UGameplayStatics::SpawnEmitterAttached(
+		emitter_template,
+		this->GetMesh(),
+		FName("Head"),
+		FVector(0, 0, 0),
+		FRotator(0, 0, 0),
+		EAttachLocation::KeepRelativeOffset,
+		true
+	);
 }
 
 
