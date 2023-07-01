@@ -25,18 +25,32 @@ FVector ASpawnVolume::get_random_point()
 	return random_point;
 }
 
+void ASpawnVolume::set_spawning_active(bool bshould_spawn)
+{
+	if (bshould_spawn)
+	{
+		//set the timer on spawn pickup
+		current_spawn_delay = FMath::FRandRange(min_spawn_delay, max_spawn_delay);
+		GetWorldTimerManager().SetTimer(
+			spawn_timer,
+			this,
+			&ASpawnVolume::spawn_pickup,
+			current_spawn_delay,
+			false
+		);
+	}
+	else
+	{
+		//clear the timer on spawn pickup
+		GetWorldTimerManager().ClearTimer(spawn_timer);
+	}
+}
+
 // Called when the game starts or when spawned
 void ASpawnVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	current_spawn_delay = FMath::FRandRange(min_spawn_delay, max_spawn_delay);
-	GetWorldTimerManager().SetTimer(
-		spawn_timer,
-		this,
-		&ASpawnVolume::spawn_pickup,
-		current_spawn_delay,
-		false
-	);
+
 }
 
 void ASpawnVolume::spawn_pickup()

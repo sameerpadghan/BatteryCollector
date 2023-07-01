@@ -32,10 +32,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 		float get_power_to_win() const;
 	//Get the current state
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		EBatteryPlayState get_current_state() const;
 	//Set the current state
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void set_current_state(EBatteryPlayState state);
 protected:
 	// Called when the game starts or when spawned
@@ -59,7 +59,8 @@ protected:
 private:
 	//Current state of the game
 	EBatteryPlayState current_state;
-
+	//TArray<int32> IntArray;
+	TArray<class ASpawnVolume*> spawn_volume_array;
 };
 
 

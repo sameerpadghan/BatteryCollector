@@ -24,6 +24,9 @@ public:
 	//Find a Random point within Box component
 	UFUNCTION(BlueprintPure, Category = "Spawning")
 		FVector get_random_point();
+	//Spawn volume should spawn or not
+	UFUNCTION(BlueprintCallable)
+		void set_spawning_active(bool bshould_spawn);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
